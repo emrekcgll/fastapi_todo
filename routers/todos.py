@@ -45,13 +45,16 @@ class TodoSchema(BaseModel):
 async def create(user: user_dependency, db: db_depenceny, request: TodoSchema):
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    data = Todos(**request.model_dump(), user_id=user.get('user_id'))
+    data = Todos(**request.model_dump(), user_id=user.get('id'))
     db.add(data)
     db.commit()
 
 
 @router.put("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def update(user: user_dependency, db: db_depenceny, request: TodoSchema, id: int = Path(gt=0)):
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
     data = db.query(Todos).filter(Todos.id == id, Todos.user_id == user.get('id')).first()
     if data is None:
         raise HTTPException(status_code=404, detail="Todo not found!")
@@ -66,9 +69,12 @@ async def update(user: user_dependency, db: db_depenceny, request: TodoSchema, i
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete(user: user_dependency, db: db_depenceny, id: int = Path(gt=0)):
-    data = db.query(Todos).filter(Todos.id == id, Todos.user_id == user.get('id'))
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    
+    data = db.query(Todos).filter(Todos.id == id, Todos.user_id == user.get('id')).first()
     if data is None:
         raise HTTPException(status_code=404, detail="Todo not found!")
 
-    data.delete()
+    db.query(Todos).filter(Todos.id == id, Todos.user_id == user.get('id')).delete()
     db.commit()

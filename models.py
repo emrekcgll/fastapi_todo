@@ -1,5 +1,5 @@
 from database import Base
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 
 
 class Users(Base):
@@ -10,9 +10,17 @@ class Users(Base):
     first_name = Column(String)
     last_name = Column(String)
     password = Column(String)
-    is_active = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=False)
     is_superuser = Column(Boolean, default=False)
     role = Column(String)
+
+class EmailConfirm(Base):
+    __tablename__ = 'email_confirm'
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    token = Column(String)
+    token_expire = Column(DateTime)
 
 
 class Todos(Base):
